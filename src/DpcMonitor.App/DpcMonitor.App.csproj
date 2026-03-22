@@ -16,6 +16,7 @@
   </PropertyGroup>
 
   <Target Name="BuildEtwDependency" BeforeTargets="ResolveReferences">
-    <MSBuild Projects="..\DpcMonitor.Etw\DpcMonitor.Etw.csproj" Targets="Build" Properties="Configuration=$(Configuration);MSBuildEnableWorkloadResolver=false" />
+    <MSBuild Projects="..\DpcMonitor.Etw\DpcMonitor.Etw.csproj" Targets="Build" Properties="Configuration=$(Configuration);MSBuildEnableWorkloadResolver=false;Restore=false" />
   </Target>
 </Project>
+

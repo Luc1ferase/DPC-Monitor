@@ -46,7 +46,26 @@ public sealed class MonitorCoordinator : IMonitorCoordinator
         }
 
         _eventSource.SampleReceived += OnSampleReceived;
-        await _eventSource.StartAsync(cancellationToken);
+
+        try
+        {
+            await _eventSource.StartAsync(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _eventSource.SampleReceived -= OnSampleReceived;
+            _snapshot = new MonitorStatusSnapshot(
+                MonitorState.Error,
+                CurrentUs: 0,
+                PeakUs: 0,
+                AverageUs: 0,
+                ThresholdUs: thresholdUs,
+                StatusMessage: $"Failed to start monitoring: {ex.Message}",
+                Chart: _snapshot.Chart);
+
+            SnapshotPublished?.Invoke(this, _snapshot);
+            return _snapshot;
+        }
 
         _snapshot = new MonitorStatusSnapshot(
             MonitorState.Running,

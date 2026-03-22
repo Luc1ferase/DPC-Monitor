@@ -39,6 +39,19 @@ public sealed class MonitorCoordinatorTests
         Assert.Equal(120, snapshot.Chart[0].CurrentUs);
     }
 
+    [Fact]
+    public async Task StartAsync_PublishesErrorSnapshot_WhenEventSourceStartThrows()
+    {
+        var source = new ThrowingDpcEventSource();
+        var privileges = new StubPrivilegeService(isElevated: true);
+        var coordinator = new MonitorCoordinator(source, privileges, new ManualLatencyClock());
+
+        var snapshot = await coordinator.StartAsync(thresholdUs: 300);
+
+        Assert.Equal(MonitorState.Error, snapshot.State);
+        Assert.Contains("ETW start failed", snapshot.StatusMessage, StringComparison.Ordinal);
+    }
+
     private sealed class FakeDpcEventSource : IDpcEventSource
     {
         public event EventHandler<DpcLatencySample>? SampleReceived;
@@ -82,4 +95,24 @@ public sealed class MonitorCoordinatorTests
     {
         public DateTimeOffset UtcNow => new(2026, 3, 22, 10, 0, 0, TimeSpan.Zero);
     }
+
+    private sealed class ThrowingDpcEventSource : IDpcEventSource
+    {
+        public event EventHandler<DpcLatencySample>? SampleReceived
+        {
+            add { }
+            remove { }
+        }
+
+        public Task StartAsync(CancellationToken cancellationToken = default)
+        {
+            throw new InvalidOperationException("ETW start failed");
+        }
+
+        public Task StopAsync(CancellationToken cancellationToken = default)
+        {
+            return Task.CompletedTask;
+        }
+    }
 }
+
