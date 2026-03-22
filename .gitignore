@@ -1,0 +1,7 @@
+.superpowers/
+.worktrees/
+worktrees/
+.vs/
+**/bin/
+**/obj/
+TestResults/
