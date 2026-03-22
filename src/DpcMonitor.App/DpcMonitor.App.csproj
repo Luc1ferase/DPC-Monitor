@@ -5,6 +5,7 @@
       <HintPath>..\DpcMonitor.Etw\bin\$(Configuration)\net8.0-windows\DpcMonitor.Etw.dll</HintPath>
       <Private>true</Private>
     </Reference>
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.30" />
   </ItemGroup>
 
   <PropertyGroup>
@@ -13,10 +14,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
+    <EtwBuildTargets Condition="'$(RuntimeIdentifier)' == ''">Build</EtwBuildTargets>
+    <EtwBuildTargets Condition="'$(RuntimeIdentifier)' != ''">Restore;Build</EtwBuildTargets>
   </PropertyGroup>
 
   <Target Name="BuildEtwDependency" BeforeTargets="ResolveReferences">
-    <MSBuild Projects="..\DpcMonitor.Etw\DpcMonitor.Etw.csproj" Targets="Build" Properties="Configuration=$(Configuration);MSBuildEnableWorkloadResolver=false;Restore=false" />
+    <MSBuild Projects="..\DpcMonitor.Etw\DpcMonitor.Etw.csproj"
+             Targets="$(EtwBuildTargets)"
+             Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);MSBuildEnableWorkloadResolver=false" />
   </Target>
 </Project>
 
