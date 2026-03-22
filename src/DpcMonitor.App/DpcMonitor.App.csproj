@@ -1,11 +1,21 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
     <ProjectReference Include="..\DpcMonitor.Core\DpcMonitor.Core.csproj" />
+    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.30" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' == ''">
     <Reference Include="DpcMonitor.Etw">
       <HintPath>..\DpcMonitor.Etw\bin\$(Configuration)\net8.0-windows\DpcMonitor.Etw.dll</HintPath>
       <Private>true</Private>
     </Reference>
-    <PackageReference Include="Microsoft.Diagnostics.Tracing.TraceEvent" Version="3.1.30" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <Reference Include="DpcMonitor.Etw">
+      <HintPath>..\DpcMonitor.Etw\bin\$(Configuration)\net8.0-windows\$(RuntimeIdentifier)\DpcMonitor.Etw.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
   </ItemGroup>
 
   <PropertyGroup>
@@ -14,8 +24,14 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <EtwBuildTargets Condition="'$(RuntimeIdentifier)' == ''">Build</EtwBuildTargets>
-    <EtwBuildTargets Condition="'$(RuntimeIdentifier)' != ''">Restore;Build</EtwBuildTargets>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' == ''">
+    <EtwBuildTargets>Build</EtwBuildTargets>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(RuntimeIdentifier)' != ''">
+    <EtwBuildTargets>Restore;Build</EtwBuildTargets>
   </PropertyGroup>
 
   <Target Name="BuildEtwDependency" BeforeTargets="ResolveReferences">
@@ -24,4 +40,3 @@
              Properties="Configuration=$(Configuration);RuntimeIdentifier=$(RuntimeIdentifier);MSBuildEnableWorkloadResolver=false" />
   </Target>
 </Project>
-
