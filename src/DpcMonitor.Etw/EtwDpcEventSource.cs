@@ -114,3 +114,4 @@ public sealed class EtwDpcEventSource : IDpcEventSource, IDisposable
         SampleReceived?.Invoke(this, new DpcLatencySample(new DateTimeOffset(timestamp), durationUs));
     }
 }
+
