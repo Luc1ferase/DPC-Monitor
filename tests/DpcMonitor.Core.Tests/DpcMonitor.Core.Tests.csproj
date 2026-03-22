@@ -22,5 +22,9 @@
     <ProjectReference Include="..\..\src\DpcMonitor.Core\DpcMonitor.Core.csproj" />
   </ItemGroup>
 
+
 </Project>
+
+
+
 

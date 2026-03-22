@@ -1,8 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
-
-    <ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\DpcMonitor.Core\DpcMonitor.Core.csproj" />
-
+    <Reference Include="DpcMonitor.Etw">
+      <HintPath>..\DpcMonitor.Etw\bin\$(Configuration)\net8.0-windows\DpcMonitor.Etw.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
   </ItemGroup>
 
   <PropertyGroup>
@@ -13,6 +15,7 @@
     <UseWPF>true</UseWPF>
   </PropertyGroup>
 
+  <Target Name="BuildEtwDependency" BeforeTargets="ResolveReferences">
+    <MSBuild Projects="..\DpcMonitor.Etw\DpcMonitor.Etw.csproj" Targets="Build" Properties="Configuration=$(Configuration);MSBuildEnableWorkloadResolver=false" />
+  </Target>
 </Project>
-
-

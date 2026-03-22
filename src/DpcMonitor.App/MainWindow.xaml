@@ -1,12 +1,124 @@
-﻿<Window x:Class="DpcMonitor.App.MainWindow"
+<Window x:Class="DpcMonitor.App.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:DpcMonitor.App"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" Width="800">
-    <Grid>
+        Title="DPC Monitor"
+        Width="1240"
+        Height="860"
+        MinWidth="1024"
+        MinHeight="720"
+        Background="{StaticResource WindowBackgroundBrush}">
+    <Window.Resources>
+        <Style x:Key="MetricCardStyle" TargetType="Border">
+            <Setter Property="Background" Value="{StaticResource CardBrush}" />
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrushSoft}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="CornerRadius" Value="18" />
+            <Setter Property="Padding" Value="18" />
+            <Setter Property="Margin" Value="0,0,12,0" />
+        </Style>
+    </Window.Resources>
 
+    <Grid Margin="24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto" />
+            <RowDefinition Height="*" />
+            <RowDefinition Height="220" />
+        </Grid.RowDefinitions>
+
+        <UniformGrid Rows="1" Columns="4" Margin="0,0,0,20">
+            <Border x:Name="CurrentCard" Style="{StaticResource MetricCardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Current" FontFamily="Bahnschrift" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock Text="{Binding CurrentText}" FontFamily="Bahnschrift" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource MetricCardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Peak" FontFamily="Bahnschrift" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock Text="{Binding PeakText}" FontFamily="Bahnschrift" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource MetricCardStyle}">
+                <StackPanel>
+                    <TextBlock Text="Average" FontFamily="Bahnschrift" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock Text="{Binding AverageText}" FontFamily="Bahnschrift" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                </StackPanel>
+            </Border>
+            <Border Style="{StaticResource MetricCardStyle}" Margin="0">
+                <StackPanel>
+                    <TextBlock Text="Threshold" FontFamily="Bahnschrift" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" />
+                    <TextBlock Text="{Binding ThresholdUs, StringFormat={}{0:0} us}" FontFamily="Bahnschrift" FontSize="30" FontWeight="Bold" Foreground="{StaticResource TextPrimaryBrush}" />
+                </StackPanel>
+            </Border>
+        </UniformGrid>
+
+        <Grid Grid.Row="1">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="1.2*" />
+            </Grid.ColumnDefinitions>
+
+            <Border Grid.Column="0" Margin="0,0,18,0" Padding="20" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1" CornerRadius="24">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <DockPanel>
+                        <StackPanel DockPanel.Dock="Left">
+                            <TextBlock Text="Real-time DPC / ISR Latency" FontFamily="Bahnschrift" FontSize="26" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                            <TextBlock Text="1-second buckets, rolling 60-point window" FontFamily="Bahnschrift" FontSize="14" Foreground="{StaticResource TextSecondaryBrush}" />
+                        </StackPanel>
+                        <Border x:Name="StatusBadge" DockPanel.Dock="Right" Background="{StaticResource AccentMutedBrush}" CornerRadius="999" Padding="12,6">
+                            <TextBlock Text="{Binding StatusMessage}" FontFamily="Bahnschrift" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource AccentBrush}" />
+                        </Border>
+                    </DockPanel>
+
+                    <Border Grid.Row="1" Margin="0,18,0,0" Background="#FFFDF9" CornerRadius="18" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1">
+                        <Canvas x:Name="ChartCanvas" ClipToBounds="True" SizeChanged="ChartCanvas_OnSizeChanged">
+                            <Polyline x:Name="LatencyPolyline" Stroke="{StaticResource ChartLineBrush}" StrokeThickness="4" StrokeLineJoin="Round" StrokeStartLineCap="Round" StrokeEndLineCap="Round" />
+                            <Line x:Name="ThresholdLine" Stroke="{StaticResource AlertBrush}" StrokeThickness="2" StrokeDashArray="6,6" />
+                        </Canvas>
+                    </Border>
+                </Grid>
+            </Border>
+
+            <StackPanel Grid.Column="1">
+                <Border Padding="18" Margin="0,0,0,18" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1" CornerRadius="24">
+                    <StackPanel>
+                        <TextBlock Text="Operator Panel" FontFamily="Bahnschrift" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="Threshold and run controls" FontFamily="Bahnschrift" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,12" />
+                        <TextBlock Text="Alert Threshold (us)" FontFamily="Bahnschrift" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" Margin="0,0,0,6" />
+                        <TextBox Text="{Binding ThresholdUs, UpdateSourceTrigger=PropertyChanged}" FontFamily="Bahnschrift" FontSize="18" Padding="10" Margin="0,0,0,14" />
+                        <Button Content="Start Monitoring" Command="{Binding StartCommand}" Height="42" Margin="0,0,0,10" Background="{StaticResource AccentBrush}" Foreground="White" BorderBrush="{StaticResource AccentBrush}" FontFamily="Bahnschrift" />
+                        <Button Content="Stop Monitoring" Command="{Binding StopCommand}" Height="42" Margin="0,0,0,10" Background="#FFF" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderBrushSoft}" FontFamily="Bahnschrift" />
+                        <Button Content="Restart Elevated" Command="{Binding RestartElevatedCommand}" Height="42" Background="#FFF" Foreground="{StaticResource TextPrimaryBrush}" BorderBrush="{StaticResource BorderBrushSoft}" FontFamily="Bahnschrift" />
+                    </StackPanel>
+                </Border>
+
+                <Border Padding="18" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1" CornerRadius="24">
+                    <StackPanel>
+                        <TextBlock Text="Live State" FontFamily="Bahnschrift" FontSize="20" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="{Binding StatusMessage}" FontFamily="Bahnschrift" FontSize="16" Margin="0,8,0,6" Foreground="{StaticResource TextPrimaryBrush}" />
+                        <TextBlock Text="The app requests admin rights only when you choose to restart elevated. No driver or service is installed." TextWrapping="Wrap" FontFamily="Bahnschrift" FontSize="13" Foreground="{StaticResource TextSecondaryBrush}" />
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <Border Grid.Row="2" Margin="0,20,0,0" Padding="18" Background="{StaticResource PanelBrush}" BorderBrush="{StaticResource BorderBrushSoft}" BorderThickness="1" CornerRadius="24">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+                <TextBlock Text="Session Log" FontFamily="Bahnschrift" FontSize="22" FontWeight="SemiBold" Foreground="{StaticResource TextPrimaryBrush}" />
+                <ListBox Grid.Row="1" Margin="0,12,0,0" ItemsSource="{Binding LogEntries}" FontFamily="Consolas" FontSize="13" BorderThickness="0" Background="Transparent" />
+            </Grid>
+        </Border>
     </Grid>
 </Window>
