@@ -38,15 +38,15 @@ public sealed class EtwDpcEventSource : IDpcEventSource, IDisposable
             _session = _sessionFactory.Create(_sessionName);
             _source = _session.Source;
 
+            _session.EnableKernelProvider(
+                KernelTraceEventParser.Keywords.DeferedProcedureCalls | KernelTraceEventParser.Keywords.Interrupt,
+                KernelTraceEventParser.Keywords.None);
+
             var parser = _source.Kernel;
             parser.PerfInfoDPC += data => PublishSample(data.TimeStamp, data.ElapsedTimeMSec * 1000.0);
             parser.PerfInfoThreadedDPC += data => PublishSample(data.TimeStamp, data.ElapsedTimeMSec * 1000.0);
             parser.PerfInfoTimerDPC += data => PublishSample(data.TimeStamp, data.ElapsedTimeMSec * 1000.0);
             parser.PerfInfoISR += data => PublishSample(data.TimeStamp, data.ElapsedTimeMSec * 1000.0);
-
-            _session.EnableKernelProvider(
-                KernelTraceEventParser.Keywords.DeferedProcedureCalls | KernelTraceEventParser.Keywords.Interrupt,
-                KernelTraceEventParser.Keywords.None);
 
             _processingTask = Task.Run(() =>
             {
@@ -114,5 +114,3 @@ public sealed class EtwDpcEventSource : IDpcEventSource, IDisposable
         SampleReceived?.Invoke(this, new DpcLatencySample(new DateTimeOffset(timestamp), durationUs));
     }
 }
-
-
