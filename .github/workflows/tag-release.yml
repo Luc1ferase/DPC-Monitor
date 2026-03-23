@@ -1,0 +1,70 @@
+name: Tag Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore
+        shell: pwsh
+        env:
+          MSBuildEnableWorkloadResolver: 'false'
+        run: dotnet restore DpcMonitor.sln -v minimal
+
+      - name: Build
+        shell: pwsh
+        env:
+          MSBuildEnableWorkloadResolver: 'false'
+        run: dotnet build DpcMonitor.sln --no-restore -c Release -m:1 -v minimal
+
+      - name: Publish single-file exe
+        shell: pwsh
+        env:
+          MSBuildEnableWorkloadResolver: 'false'
+        run: |
+          Remove-Item release-output -Recurse -Force -ErrorAction SilentlyContinue
+          dotnet publish src\DpcMonitor.App\DpcMonitor.App.csproj `
+            -c Release `
+            -r win-x64 `
+            --self-contained false `
+            -m:1 `
+            -p:PublishSingleFile=true `
+            -p:IncludeNativeLibrariesForSelfExtract=true `
+            -o release-output
+
+      - name: Prepare release asset
+        shell: pwsh
+        run: |
+          Rename-Item -Path release-output\DpcMonitor.App.exe -NewName dpcMonitor.exe
+          Get-ChildItem release-output | Where-Object { $_.Name -ne 'dpcMonitor.exe' } | Remove-Item -Recurse -Force
+
+      - name: Create or update GitHub Release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          $tag = '${{ github.ref_name }}'
+          $asset = 'release-output\dpcMonitor.exe'
+          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag $asset --repo $env:GITHUB_REPOSITORY --title $tag --generate-notes
+          }
+          else {
+            gh release upload $tag $asset --repo $env:GITHUB_REPOSITORY --clobber
+          }
