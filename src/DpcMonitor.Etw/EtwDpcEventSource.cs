@@ -36,11 +36,11 @@ public sealed class EtwDpcEventSource : IDpcEventSource, IDisposable
             }
 
             _session = _sessionFactory.Create(_sessionName);
-            _source = _session.Source;
-
             _session.EnableKernelProvider(
                 KernelTraceEventParser.Keywords.DeferedProcedureCalls | KernelTraceEventParser.Keywords.Interrupt,
                 KernelTraceEventParser.Keywords.None);
+
+            _source = _session.Source;
 
             var parser = _source.Kernel;
             parser.PerfInfoDPC += data => PublishSample(data.TimeStamp, data.ElapsedTimeMSec * 1000.0);
